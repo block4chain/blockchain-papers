@@ -4,5 +4,5 @@
 
 ## 共识
 
-* [Monoxide: Scale out Blockchains withAsynchronous Consensus Zones](gong-shi/monoxide-scale-out-blockchains-withasynchronous-consensus-zones.md)
+* [Monoxide: Scale Out Blockchains with Asynchronous Consensus Zones](gong-shi/monoxide-scale-out-blockchains-withasynchronous-consensus-zones.md)
 

@@ -6,7 +6,7 @@
 
 ### 帐户
 
-Monoxide的帐户采用Account/Balance模型，帐户包含一些状态，公钥哈希值用作帐户地址\(Address\)，可以唯一标识帐户。所有帐户按照地址被分割到$$2^k$$ 个分区。
+Monoxide的帐户采用Account/Balance模型，帐户包含一些状态，公钥哈希值用作帐户地址\(Address\)，可以唯一标识帐户。所有帐户按照地址被分割到$$2^k$$ 个组。
 
 ### 共识组
 
@@ -18,7 +18,48 @@ Monoxide的帐户采用Account/Balance模型，帐户包含一些状态，公钥
 
 系统网络被划分为一些逻辑分区，称为Swarm。节点加入Swarm后可以向本Swarm广播交易或者接受本Swarm内其它节点广播的块或交易。
 
-每个共识组都有一个自己的Swarm，同时系统中存在一个全局的Swarm，所有的节点都会加入该Swarm，用来完成跨共识组通讯。
+每个共识组都有一个自己的Swarm，同时系统中存在一个Global Swarm，所有的节点都会加入该Swarm，用来完成跨共识组通讯。
 
 网络通信采用DHT算法，用来实现Swarm寻址和节点发现。
+
+## 区块
+
+Monoxide中存在两种类型的块: chaining-block和transaction-block. 
+
+![](../.gitbook/assets/block_structure.png)
+
+* chaining-block包含链信息和POW校验元信息，可以执行快速校验，transaction-block包含块中已确认的交易。
+* chaining-block的占用空间固定，大概100字节; transaction-block的占用空间随着交易数和交易大小会发生很大变化
+* transaction-block一般存储在全节点中。
+
+## 交易
+
+Monoxide将帐户也划分到多个组，交易涉及的帐户有可能跨越多个组。同组内的交易执行流程与现有的区块链系统\(Bitcoin, Ethereum\)类似，当帐户跨越多个组时，不但要保证交易的原子执行，还要保证交易执行的效率。
+
+### 交易流程
+
+![](../.gitbook/assets/monoxide_tx.png)
+
+以帐户Alice向帐户Bob转帐为例，其中Alice属于组A, Bob属于组B:
+
+1. 组A内的矿工收到Alice的交易请求p
+2. 矿工对交易进行校验，保证交易有效且合法。交易校验通过后:
+   * 如果A，B是相同的组或者交易是Inbound中继交易，则将交易放在块的交易列表中
+   * 如果A，B是不同的组，则对交易进行拆分为两部分:
+     * 对Alice的扣款交易，放到块的交易列表
+     * 对Bob的充值交易，放到Outbound中继交易列表
+3. 矿工对新块执行POW算法\(假设使用POW共识算法\)，成功后将发现的新块chaining-block广播到global swarm, transaction-block广播到本组的swarm
+4. 矿工收到新的transaction-block块，如果块是本组的并且校验通过，则执行其中的交易。对于Outbound中继交易，将中继交易发送到目标组。
+
+### 中继交易
+
+Alice向Bob转帐的例子中，当Alice和Bob不在同一个组时，会产生中继交易:
+
+$$
+\psi=(\phi,Bob,\gamma)
+$$
+
+其中 $$\phi$$ 是转帐金额，Bob是目标帐户， $$\gamma$$ 是中继交易证明
+
+
 

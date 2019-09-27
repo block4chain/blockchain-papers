@@ -1,5 +1,13 @@
 # Monoxide: Scale Out Blockchains with Asynchronous Consensus Zones
 
+## 名词解释
+
+### Merkle验证路径
+
+![](../.gitbook/assets/merkle_path.png)
+
+为了证明交易3存在于一个交易集中，可以提供一个Merkle验证路径，即图中的\(Root, M4, M3, M1, M2, 3\)，通过如果通过路径恢复的根Hash与Root值一致，则证明成立。
+
 ## 系统设计
 
 ![](../.gitbook/assets/monoxide_arch.png)
@@ -59,7 +67,15 @@ $$
 \psi=(\phi,Bob,\gamma)
 $$
 
-其中 $$\phi$$ 是转帐金额，Bob是目标帐户， $$\gamma$$ 是中继交易证明
+其中 $$\phi$$ 是转帐金额，Bob是目标帐户， $$\gamma$$ 是中继交易证明。
+
+中继交易证明用来证明一个中断交易的合法性，证明数据包含:
+
+$$
+\gamma=(s,k,t,p,\{h_q\})
+$$
+
+其中$$s$$ 是组号，$$k$$ 是分区系数， $$t$$ 是块高度， $$p$$ 是 $$t$$ 指定的块中Outbound中继事务索引号， $$\{h_q\}$$ 是Merkle树验证路径。
 
 
 

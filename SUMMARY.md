@@ -10,6 +10,5 @@
 
 ## 网络
 
-* [Kademlia: A Peer-to-peer information system based on the XOR Metric](wang-luo/kademlia-a-peer-to-peer-information-system-based-on-the-xor-metric.md)
 * [Kademlia: A Peer-to-peer information system based on the XOR Metric](wang-luo/kademlia-a-peer-to-peer-information-system-based-on-the-xor-metric-1.md)
 

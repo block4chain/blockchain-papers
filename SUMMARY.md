@@ -12,3 +12,7 @@
 
 * [Kademlia: A Peer-to-peer information system based on the XOR Metric](wang-luo/kademlia-a-peer-to-peer-information-system-based-on-the-xor-metric-1.md)
 
+## 共识 <a id="gong-shi-1"></a>
+
+* [Introducing the “Minimal CBC Casper” Family of ConsensusProtocols](gong-shi-1/introducing-the-minimal-cbc-casper-family-of-consensusprotocols.md)
+

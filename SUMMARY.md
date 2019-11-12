@@ -15,4 +15,5 @@
 ## 共识 <a id="gong-shi-1"></a>
 
 * [Introducing the “Minimal CBC Casper” Family of ConsensusProtocols](gong-shi-1/introducing-the-minimal-cbc-casper-family-of-consensusprotocols.md)
+* [Tendermint: The latest gossip on BFT consensus](tendermint-the-latest-gossip-on-bft-consensus.md)
 

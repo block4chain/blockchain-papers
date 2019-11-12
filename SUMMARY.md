@@ -14,6 +14,7 @@
 
 ## 共识 <a id="gong-shi-1"></a>
 
+* [Practical Byzantine Fault Toleranceand Proactive Recovery](gong-shi-1/practical-byzantine-fault-toleranceand-proactive-recovery.md)
 * [Introducing the “Minimal CBC Casper” Family of ConsensusProtocols](gong-shi-1/introducing-the-minimal-cbc-casper-family-of-consensusprotocols.md)
 * [Tendermint: The latest gossip on BFT consensus](tendermint-the-latest-gossip-on-bft-consensus.md)
 

@@ -183,7 +183,7 @@ replica节点收到其它节点的Prepare消息$$<Prepare, v, n,D(m), i>$$:
 3. 如果replica节点包含对应的Pre-prepare消息，以及收集到至少$$2f$$ 个来自不同replica的Prepare消息，即这至少 $$2f+1$$ 个消息拥有相同的 $$(v,n,D(m))$$，则节点进入Prepare状态。
 4. 向其它节点发送Commit消息 $$<Commit, v,n,D(m), i>$$ ，并将Commit消息保存在消息日志
 
-replica本身的Pre-prepare消息，以及收集到的至少$$2f$$ 个来自其它不同replica的Prepare消息，这说明集群内至少 $$2f+1$$ 个节点同意Primary给客户端请求分配的序列号。这 $$2f+1$$ 组消息成了一个_Quorum Certificate，也被称为Prepare Certificate_
+replica本身的Pre-prepare消息，以及收集到的至少$$2f$$ 个来自其它不同replica的Prepare消息，这说明集群内至少 $$2f+1$$ 个节点同意Primary给客户端请求分配的序列号。这 $$2f+1$$ 组消息成了一个_Quorum Certificate，也被称为Prepared Certificate_
 
 Prepare消息保证Primary给客户端请求分配的序列号被一个Quorum接受: 即使出现至多 $$f$$ 个backup节点出现错误，算法也可以安全运行。
 
@@ -201,7 +201,7 @@ replica节点收到其它节点的Commit消息 $$<Commit, v,n,D(m), i>$$ :
 4. 待所有序列号小于 $$m$$ 的消息都执行完成后，执行消息 $$m$$ 的操作
 5. 向客户端发送响应Reply消息
 
-replica节点收集到的至少 $$2f+1$$ 个来自不同replica\(包括节点本身\)的Commit消息组成一个_Quorum Certificat，也被称为Commit Certificate_
+replica节点收集到的至少 $$2f+1$$ 个来自不同replica\(包括节点本身\)的Commit消息组成一个_Quorum Certificat，也被称为Committed Certificate_
 
 ## 垃圾回收
 
@@ -215,7 +215,7 @@ replica节点收集到的至少 $$2f+1$$ 个来自不同replica\(包括节点本
 
 当请求序列号能整除固定值 $$K$$ 时，节点会进行垃圾回收协议。 $$K$$ 被称为_checkpoint period。_
 
-### 状态
+### 执行状态
 
 节点在执行客户端请求操作后会产生状态集，这些状态集被称为_checkpoint_。节点同一时刻可能维护多份checkpoint。
 
@@ -242,15 +242,94 @@ replica节点会维护一个消息序列号边界 $$(h,H]$$ :
 
 ## 视图变更
 
+当Primary出现错误时，为了保护算法能继续工作，需要将当前视图切换到新视图 $$v \to {v+1}$$ 
 
+### 数据结构
 
+数据结构 $$C$$ :
 
+$$
+C=\{(k,v)\}
+$$
 
+记录当前结点的所有checkpoint, 其中 $$k$$ 是checkpoint最大序列号, $$v$$ 是checkpoint的摘要
 
+数据结构 $$P$$ :
 
+$$
+P=\{p|p=(n,d,v)\}
+$$
 
+记录当前replica节点收集到的带有prepared certificate的请求，其中:
 
+* $$n$$ 是请求的序列号，且 $$n \in (h, H]$$ 
+* $$d$$ 是请求的摘要
+* $$v$$ 是请求发生时的视图
 
+数据结构 $$Q$$ :
+
+$$
+Q=\{q|q=(n,d,v)\}
+$$
+
+记录当前replica节点已经发出的Pre-prepare消息的请求，或者收到的发出Prepare消息的请求，这些请求还没有prepared certificate.
+
+数据结构 $$S$$ 是当前replica节点记录的所有带有view-change certificate的View-Change消息。
+
+数据结构 $$V$$ :
+
+$$
+V=\{v|(i, D(vc)\}
+$$
+
+记录新视图的Primary的数据结构 $$S$$ 的摘要, 其中 $$i$$ 是发送View-Change消息的节点， $$D(vc)$$ 是对应View-Change消息的摘要
+
+数据结构 $$X$$  记录了新视图Primary选择的checkpoint和请求
+
+### View-Change消息
+
+当replica节点 $$i$$ 认为Primary出现错误时
+
+1. 会向集群发送View-Change消息 
+
+$$
+<View-Change, v+1, h, C,P,Q,i)
+$$
+
+其中:
+
+* $$v+1$$ 是新的视图编号
+* $$h$$ 是序列号边界下限
+
+ 2. 清空本地的Pre-Prepare、Prepare、Commit消息
+
+### View-Change-Ack消息
+
+replica节点收到View-Change消息:
+
+1. 检查消息是否可以接受:
+   * 检查消息的MAC
+   * $$\forall x=(n_x,d_x,v_x)\in P \cup Q, v_x \le v $$ ， $$v$$ 代表变更前的视图编号
+2. 如果不接受，则忽略消息；接受则向新视图的Primary发送View-Change-Ack消息:
+
+$$
+<View-Change-Ack, v+1, i, j, d>
+$$
+
+其中: $$i$$ 是发送View-Change-Ack消息的节点标识， $$j$$ 是发送View-Change消息的节点标识
+
+### New-View消息
+
+新视图的Primary会收到View-Change消息和View-Change-Ack消息:
+
+1. 检查View-Change消息\(同上\)，接受将消息保存到消息日志
+2. 检查View-Change-Ack消息，并检查消息MAC，接受后将消息保存到消息日志
+3. 当Primary收集到 $$2f$$ 个来自其它节点\(包括自己\)的View-Change-Ack消息，这些消息都是对replica节点 $$j$$ 的View-Change消息的确认。则将节点 $$j$$ 的View-Change消息放入数据结构 $$S$$ 
+4. 基于 $$S$$ 选择新视图的checkpoint:
+
+![](../.gitbook/assets/pbft-new-primary.png)
+
+  5. 执行选择checkpoint完成以后发送New-View消息: $$<New-View, v+1, V, X>$$ 
 
 
 

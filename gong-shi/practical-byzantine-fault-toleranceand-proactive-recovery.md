@@ -203,7 +203,37 @@ replica节点收到其它节点的Commit消息 $$<Commit, v,n,D(m), i>$$ :
 
 replica节点收集到的至少 $$2f+1$$ 个来自不同replica\(包括节点本身\)的Commit消息组成一个_Quorum Certificat，也被称为Commit Certificate_
 
+## 垃圾回收
 
+### 安全性
+
+算法在执行过程中会存储很多消息，这些消息需要被适当的清理，否则会占用过多的存储空间。
+
+但是在清理消息之前需要保证安全性: 即证明请求操作被执行，并且执行后的状态正确。
+
+### 回收时机
+
+当请求序列号能整除固定值 $$K$$ 时，节点会进行垃圾回收协议。 $$K$$ 被称为_checkpoint period。_
+
+### 状态
+
+节点在执行客户端请求操作后会产生状态集，这些状态集被称为_checkpoint_。节点同一时刻可能维护多份checkpoint。
+
+具有_Stable Certificate_的checkpoint称为_stable checkpoint。_节点会维护最后一份stable checkpoint。
+
+### 流程
+
+replica节点 $$i$$ 发起垃圾回收:
+
+1. 向其它节点发送Checkpoint消息: $$<Checkpoint, n, d , i>$$ ，其中:
+   * $$n$$ : 所有序列号小于或等于 $$n$$ 的消息都会被清理
+   * $$d$$ : 所有序列号小于或等于 $$n$$ 的客户端请求的操作执行完后replica节点状态集的摘要
+2. 接收来自其它结节的Checkpoint消息，如果收到的Checkpoint消息 $$(n,d)$$ 相同，则将消息保存
+3. 如果消息日志中收到至少 $$2f+1$$ 个来自不同节点\(包括自己\)的Checkpoint消息，则可以安全地清理消息日志中所有序列号小于或等于 $$n$$ 的消息，以及早期的checkpoints.
+
+至少 $$2f+1$$ 个来自不同节点\(包括自己\)的Checkpoint消息组成一个Quorum Certificate, 又称为_Stable Certificate_
+
+## 视图变更
 
 
 

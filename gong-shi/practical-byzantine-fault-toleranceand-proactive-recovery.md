@@ -149,12 +149,12 @@ replica节点的Pre-prepare, Prepare, Commit状态分别对应3PC的Pre-prepare,
   * 节点发送给客户端的Reply消息
 * replica节点当前处于的视图
 
-### Pre-Prepare阶段
+### Pre-Prepare消息
 
 Primary收到客户端消息$$m=<Request, o, t, c>$$ :
 
 1. 保存客户端消息到消息日志，并为消息分配一个序列号 $$n$$ 
-2. 向其它replica节点发送Pre-prepare消息 $$<Pre-prepare, v, n, D(m)>$$ ，其中 $$D(m)$$ 是消息摘要. 
+2. 向其它replica节点发送Pre-prepare消息 $$<Pre-prepare, v, n, D(m)>$$ ，其中 $$D(m)$$ 是消息摘要，并保存Pre-prepare消息到消息日志
 3. 节点进入Pre-prepare状态
 
 Backup收到Primary的Pre-prepare消息$$<Pre-prepare, v, n, D(m)>$$ :
@@ -165,11 +165,12 @@ Backup收到Primary的Pre-prepare消息$$<Pre-prepare, v, n, D(m)>$$ :
    * 校验消息的MAC值
    * 没有接收过和这个消息 $$(v,n)$$ 相同，但消息摘要不同的其它消息
 2. 如果消息检查失败，则忽略消息; 如果成功，则将消息保存到消息日志。
-3. 如果replica节点包含请求$$m$$ ，则节点进入Pre-prepare状态，然后向其它节点发送Prepare消息 $$<Prepare, v, n,D(m), i>$$ ，并将这个消息保存到消息日志。
+3. 如果replica节点包含请求$$m$$ ，则节点进入Pre-prepare状态，
+4. 向其它节点发送Prepare消息 $$<Prepare, v, n,D(m), i>$$ ，并将这个消息保存到消息日志。
 
-Pre-prepare阶段为客户端请求分配一个全序的序列号，并尝试将序列号同步到整个replica集群。
+Pre-prepare消息为客户端请求分配一个全序的序列号，并尝试将序列号同步到整个replica集群。
 
-### Prepare阶段
+### Prepare消息
 
 replica节点收到其它节点的Prepare消息$$<Prepare, v, n,D(m), i>$$:
 
@@ -179,7 +180,35 @@ replica节点收到其它节点的Prepare消息$$<Prepare, v, n,D(m), i>$$:
    * 校验消息的MAC值
    * 没有接收过和这个消息 $$(v,n,i)$$ 相同，但消息摘要不同的其它消息
 2. 如果消息检查失败，则忽略消息; 如果成功，则将消息保存到消息日志。
-3. 
+3. 如果replica节点包含对应的Pre-prepare消息，以及收集到至少$$2f$$ 个来自不同replica的Prepare消息，即这至少 $$2f+1$$ 个消息拥有相同的 $$(v,n,D(m))$$，则节点进入Prepare状态。
+4. 向其它节点发送Commit消息 $$<Commit, v,n,D(m), i>$$ ，并将Commit消息保存在消息日志
+
+replica本身的Pre-prepare消息，以及收集到的至少$$2f$$ 个来自其它不同replica的Prepare消息，这说明集群内至少 $$2f+1$$ 个节点同意Primary给客户端请求分配的序列号。这 $$2f+1$$ 组消息成了一个_Quorum Certificate，也被称为Prepare Certificate_
+
+Prepare消息保证Primary给客户端请求分配的序列号被一个Quorum接受: 即使出现至多 $$f$$ 个backup节点出现错误，算法也可以安全运行。
+
+### Commit消息
+
+replica节点收到其它节点的Commit消息 $$<Commit, v,n,D(m), i>$$ :
+
+1. 检查消息是否可以接受
+   * 消息视图与节点的视图相同
+   * 消息的序列号 $$n \in [h, H]$$ , $$h$$和 $$H$$ 是一个序列号边界。
+   * 校验消息的MAC值
+   * 没有接收过和这个消息 $$(v,n,i)$$ 相同，但消息摘要不同的其它消息
+2. 如果消息检查失败，则忽略消息; 如果成功，则将消息保存到消息日志
+3. 如果节点包含请求消息 $$m$$ ，并且消息日志中存在至少 $$2f+1$$ 个来自不同replica\(包括节点本身\)的Commit消息，则提交消息 $$m$$ 到执行队列。
+4. 待所有序列号小于 $$m$$ 的消息都执行完成后，执行消息 $$m$$ 的操作
+5. 向客户端发送响应Reply消息
+
+replica节点收集到的至少 $$2f+1$$ 个来自不同replica\(包括节点本身\)的Commit消息组成一个_Quorum Certificat，也被称为Commit Certificate_
+
+
+
+
+
+
+
 
 
 

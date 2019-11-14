@@ -244,6 +244,8 @@ replica节点会维护一个消息序列号边界 $$(h,H]$$ :
 
 当Primary出现错误时，为了保护算法能继续工作，需要将当前视图切换到新视图 $$v \to {v+1}$$ 
 
+![](../.gitbook/assets/pbft-view-change.png)
+
 ### 数据结构
 
 数据结构 $$C$$ :
@@ -329,7 +331,17 @@ $$
 
 ![](../.gitbook/assets/pbft-new-primary.png)
 
-  5. 执行选择checkpoint完成以后发送New-View消息: $$<New-View, v+1, V, X>$$ 
+  5. 执行选择checkpoint完成，向集群发送New-View消息: $$<New-View, v+1, V, X>$$ 
+
+  6. 新Primary从其它replica节点获取缺失的checkpoint和请求，并发起checkpoint请求，得到一个stable checkpoint。
+
+  7. 将挑选的请求的视图编号修改为 $$v+1$$ 
+
+backup节点接收到New-View消息:
+
+1. 等待收集完所有 $$V$$ 中对应的View-Change消息
+2. 校验New-View消息合法，如果不合法，则将新视图切换到 $$v+2$$ 
+3. 如果合法，则将状态置为与New-View消息同步\(同Primary\)，并为挑选的请求发送Prepare消息
 
 
 

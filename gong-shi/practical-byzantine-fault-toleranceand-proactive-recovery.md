@@ -131,6 +131,61 @@ replica节点会保存它向客户端响应的最后一条Reply，如果replica�
 * 客户端ID与会话密钥的映射
 * 客户端最后一条请求的响应
 
+## 正常流程
+
+![replica&#x8282;&#x70B9;&#x72B6;&#x6001;&#x8F6C;&#x6362;](../.gitbook/assets/node-3pc.png)
+
+replica节点的Pre-prepare, Prepare, Commit状态分别对应3PC的Pre-prepare, Prepare, Commit阶段。
+
+### replica状态数据
+
+* replica节点当前状态: 
+  * Pre-prepare
+  * Prepare
+  * Commit
+* 消息日志\(message log\)。记录节点发送、接收到的消息，消息日志可以不用持久化:
+  * 客户端发送的Request消息
+  * 节点发送或接收的Pre-prepare, Prepare,  Commit消息
+  * 节点发送给客户端的Reply消息
+* replica节点当前处于的视图
+
+### Pre-Prepare阶段
+
+Primary收到客户端消息$$m=<Request, o, t, c>$$ :
+
+1. 保存客户端消息到消息日志，并为消息分配一个序列号 $$n$$ 
+2. 向其它replica节点发送Pre-prepare消息 $$<Pre-prepare, v, n, D(m)>$$ ，其中 $$D(m)$$ 是消息摘要. 
+3. 节点进入Pre-prepare状态
+
+Backup收到Primary的Pre-prepare消息$$<Pre-prepare, v, n, D(m)>$$ :
+
+1. 检查消息是否可以接受:
+   * 消息视图与节点的视图相同
+   * 消息的序列号 $$n \in [h, H]$$ , $$h$$和 $$H$$ 是一个序列号边界。
+   * 校验消息的MAC值
+   * 没有接收过和这个消息 $$(v,n)$$ 相同，但消息摘要不同的其它消息
+2. 如果消息检查失败，则忽略消息; 如果成功，则将消息保存到消息日志。
+3. 如果replica节点包含请求$$m$$ ，则节点进入Pre-prepare状态，然后向其它节点发送Prepare消息 $$<Prepare, v, n,D(m), i>$$ ，并将这个消息保存到消息日志。
+
+Pre-prepare阶段为客户端请求分配一个全序的序列号，并尝试将序列号同步到整个replica集群。
+
+### Prepare阶段
+
+replica节点收到其它节点的Prepare消息$$<Prepare, v, n,D(m), i>$$:
+
+1. 检查消息是否可以接受
+   * 消息视图与节点的视图相同
+   * 消息的序列号 $$n \in [h, H]$$ , $$h$$和 $$H$$ 是一个序列号边界。
+   * 校验消息的MAC值
+   * 没有接收过和这个消息 $$(v,n,i)$$ 相同，但消息摘要不同的其它消息
+2. 如果消息检查失败，则忽略消息; 如果成功，则将消息保存到消息日志。
+3. 
+
+
+
+
+
+
 
 
 

@@ -8,8 +8,6 @@
 * [Practical Byzantine Fault Toleranceand Proactive Recovery](gong-shi/practical-byzantine-fault-toleranceand-proactive-recovery.md)
 * [Introducing the “Minimal CBC Casper” Family of ConsensusProtocols](gong-shi/introducing-the-minimal-cbc-casper-family-of-consensusprotocols.md)
 
-## p2p网络
-
 ## 网络
 
 * [Kademlia: A Peer-to-peer information system based on the XOR Metric](wang-luo/kademlia-a-peer-to-peer-information-system-based-on-the-xor-metric-1.md)
@@ -18,4 +16,8 @@
 ## 跨链
 
 * [Atomic Cross-Chain Swaps](kua-lian/untitled.md)
+
+## layer-2
+
+* [The Bitcoin Lightning Network:Scalable Oﬀ-Chain Instant Payments](layer-2/the-bitcoin-lightning-network-scalable-o-chain-instant-payments.md)
 

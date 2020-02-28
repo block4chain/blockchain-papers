@@ -10,6 +10,7 @@
 
 ## 网络
 
+* [Democratizing content publication with Coral](wang-luo/democratizing-content-publication-with-coral.md)
 * [Kademlia: A Peer-to-peer information system based on the XOR Metric](wang-luo/kademlia-a-peer-to-peer-information-system-based-on-the-xor-metric-1.md)
 * [Tendermint: The latest gossip on BFT consensus](tendermint-the-latest-gossip-on-bft-consensus.md)
 

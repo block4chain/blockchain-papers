@@ -10,6 +10,7 @@
 
 ## 网络
 
+* [S/Kademlia: A Practicable Approach Towards Secure Key-Based Routing](wang-luo/s-kademlia-a-practicable-approach-towards-secure-key-based-routing.md)
 * [Democratizing content publication with Coral](wang-luo/democratizing-content-publication-with-coral.md)
 * [Kademlia: A Peer-to-peer information system based on the XOR Metric](wang-luo/kademlia-a-peer-to-peer-information-system-based-on-the-xor-metric-1.md)
 * [Tendermint: The latest gossip on BFT consensus](tendermint-the-latest-gossip-on-bft-consensus.md)

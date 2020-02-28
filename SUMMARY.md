@@ -21,3 +21,7 @@
 
 * [The Bitcoin Lightning Network:Scalable Oﬀ-Chain Instant Payments](layer-2/the-bitcoin-lightning-network-scalable-o-chain-instant-payments.md)
 
+## 白皮书
+
+* [IPFS - Content Addressed, Versioned, P2P File System](bai-pi-shu/ipfs-content-addressed-versioned-p2p-file-system.md)
+
